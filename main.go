@@ -2,150 +2,200 @@ package main
 
 import (
 	"fmt"
-	"github.com/pelletier/go-toml/v2"
-	"github.com/skratchdot/open-golang/open"
-	"io/ioutil"
-	"log"
-	"time"
-
 	"github.com/emersion/go-autostart"
 	"github.com/getlantern/systray"
-	"github.com/getlantern/systray/example/icon"
+	"github.com/pelletier/go-toml/v2"
+	"github.com/skratchdot/open-golang/open"
+	"gopkg.in/natefinch/lumberjack.v2"
+	"goupbox/icon"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path"
+	"time"
 )
 
-type MyConfig struct {
-	Version int
-	Name    string
-	Tags    []string
+var lumberJackLog = &lumberjack.Logger{
+	Filename:   "./logs/goupbox.log",
+	MaxSize:    100, // megabytes
+	MaxBackups: 2,
+	MaxAge:     7, //days
 }
 
+var cfg struct {
+	AppName                   string
+	AppDirectory              string
+	AppUrl                    string
+	CheckForUpdatesVersionUrl string
+}
+
+var app *autostart.App
+
 func main() {
-	app := &autostart.App{
-		Name:        "GoUpBox",
-		DisplayName: "GoUpBox",
-		Exec:        []string{"sh", "-c", "echo autostart >> ~/autostart.txt"},
+	f, err := os.Open("settings.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	bDoc, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	if app.IsEnabled() {
-		log.Println("GoUpBox is already enabled...")
-
-		//if err := app.Disable(); err != nil {
-		//	log.Fatal(err)
-		//}
-	} else {
-		log.Println("Enabling GoUpBox...")
-
-		if err := app.Enable(); err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	log.Println("Done!")
-
-	doc := `
-version = 2
-name = "go-toml"
-tags = ["go", "toml"]
-`
-
-	var cfg MyConfig
-	err := toml.Unmarshal([]byte(doc), &cfg)
+	err = toml.Unmarshal(bDoc, &cfg)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("version:", cfg.Version)
-	fmt.Println("name:", cfg.Name)
-	fmt.Println("tags:", cfg.Tags)
+	fmt.Println("AppName:", cfg.AppName)
+
+	log.Printf("Switching logs output to '%s'...", lumberJackLog.Filename)
+	log.SetOutput(lumberJackLog)
+
+	app = &autostart.App{
+		Name:        cfg.AppName,
+		DisplayName: cfg.AppName,
+		//Exec:        []string{"sh", "-c", "echo autostart >> ~/autostart.txt"},
+	}
 
 	onExit := func() {
 		now := time.Now()
-		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
+		log.Printf("%d %s", now.UnixNano(), now.String())
 	}
 
 	systray.Run(onReady, onExit)
 }
 
+func onStartup(enabling bool) {
+	if enabling {
+		if app.IsEnabled() {
+			log.Println(cfg.AppName + " is already enabled...")
+		} else {
+			log.Println("Enabling " + cfg.AppName + "...")
+
+			if err := app.Enable(); err != nil {
+				log.Fatal(err)
+			}
+		}
+	} else {
+		if app.IsEnabled() {
+			log.Println("Disabling " + cfg.AppName + "...")
+
+			if err := app.Disable(); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
+func sync() {
+}
+
+func checkForUpdates() (bool, string) {
+	resp, err := http.Get(cfg.CheckForUpdatesVersionUrl)
+	if err != nil {
+		log.Println(err)
+		return false, ""
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		log.Println("Error: " + string(body))
+		return false, ""
+	}
+
+	f, err := os.Open(path.Join(cfg.AppDirectory, "VERSION"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	localVersion, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return string(body) != string(localVersion), string(body)
+}
+
 func onReady() {
 	systray.SetTemplateIcon(icon.Data, icon.Data)
-	systray.SetTitle("Awesome App")
-	systray.SetTooltip("Lantern")
-	mQuitOrig := systray.AddMenuItem("Quit", "Quit the whole app")
-	go func() {
-		<-mQuitOrig.ClickedCh
-		fmt.Println("Requesting quit")
-		systray.Quit()
-		fmt.Println("Finished quitting")
-	}()
+	systray.SetTitle("")
+	systray.SetTooltip(cfg.AppName)
 
 	// We can manipulate the systray in other goroutines
 	go func() {
 		systray.SetTemplateIcon(icon.Data, icon.Data)
 		systray.SetTitle("")
-		systray.SetTooltip("GupBox")
-		mChange := systray.AddMenuItem("Change Me", "Change Me")
-		mChecked := systray.AddMenuItemCheckbox("Unchecked", "Check Me", true)
-		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
-		// Sets the icon of a menu item. Only available on Mac.
-		mEnabled.SetTemplateIcon(icon.Data, icon.Data)
+		systray.SetTooltip(cfg.AppName)
 
-		systray.AddMenuItem("Ignored", "Ignored")
+		mAutostart := systray.AddMenuItemCheckbox("Launch on Startup", "Launch on Startup", app.IsEnabled())
 
-		subMenuTop := systray.AddMenuItem("SubMenuTop", "SubMenu Test (top)")
-		subMenuMiddle := subMenuTop.AddSubMenuItem("SubMenuMiddle", "SubMenu Test (middle)")
-		subMenuBottom := subMenuMiddle.AddSubMenuItemCheckbox("SubMenuBottom - Toggle Panic!", "SubMenu Test (bottom) - Hide/Show Panic!", false)
-		subMenuBottom2 := subMenuMiddle.AddSubMenuItem("SubMenuBottom - Panic!", "SubMenu Test (bottom)")
+		mCheckForUpdates := systray.AddMenuItem("Check for Updates...", "Check for Updates")
+		mUpdate := systray.AddMenuItem("Update...", "Update")
 
-		mUrl := systray.AddMenuItem("Open UI", "my home")
-		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
-
-		// Sets the icon of a menu item. Only available on Mac.
-		mQuit.SetIcon(icon.Data)
-
-		systray.AddSeparator()
-		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
-		shown := true
-		toggle := func() {
-			if shown {
-				subMenuBottom.Check()
-				subMenuBottom2.Hide()
-				mQuitOrig.Hide()
-				mEnabled.Hide()
-				shown = false
-			} else {
-				subMenuBottom.Uncheck()
-				subMenuBottom2.Show()
-				mQuitOrig.Show()
-				mEnabled.Show()
-				shown = true
-			}
+		checkForUpdates1 := func() {
+			mCheckForUpdates.SetTitle("Checking...")
+			go func() {
+				defer func() {
+					mCheckForUpdates.SetTitle("Check for Updates...")
+					mCheckForUpdates.Enable()
+				}()
+				mCheckForUpdates.Disable()
+				if status, version := checkForUpdates(); status {
+					log.Println("Found new version of " + cfg.AppName + ":" + version)
+					mUpdate.SetTitle("Update to new version of " + cfg.AppName + ":" + version)
+					mUpdate.Enable()
+				} else {
+					log.Println("No new version of " + cfg.AppName)
+					mUpdate.SetTitle("No new version of " + cfg.AppName)
+					mUpdate.Disable()
+				}
+			}()
 		}
 
+		checkForUpdates1()
+
+		//subMenuTop := systray.AddMenuItem("SubMenuTop", "SubMenu Test (top)")
+		//subMenuMiddle := subMenuTop.AddSubMenuItem("SubMenuMiddle", "SubMenu Test (middle)")
+		//subMenuBottom2 := subMenuMiddle.AddSubMenuItem("SubMenuBottom - Panic!", "SubMenu Test (bottom)")
+
+		mUrl := systray.AddMenuItem("Help", "Open in Browser")
+
+		systray.AddSeparator()
+		mQuit := systray.AddMenuItem("Quit", "Quit")
 		for {
 			select {
-			case <-mChange.ClickedCh:
-				mChange.SetTitle("I've Changed")
-			case <-mChecked.ClickedCh:
-				if mChecked.Checked() {
-					mChecked.Uncheck()
-					mChecked.SetTitle("Unchecked")
+			case <-mAutostart.ClickedCh:
+				onStartup(!app.IsEnabled())
+				if app.IsEnabled() {
+					mAutostart.Check()
 				} else {
-					mChecked.Check()
-					mChecked.SetTitle("Checked")
+					mAutostart.Uncheck()
 				}
-			case <-mEnabled.ClickedCh:
-				mEnabled.SetTitle("Disabled")
-				mEnabled.Disable()
+				break
+			case <-mCheckForUpdates.ClickedCh:
+				checkForUpdates1()
+				break
+			case <-mUpdate.ClickedCh:
+				sync()
+				checkForUpdates1()
+				break
 			case <-mUrl.ClickedCh:
-				open.Run("https://www.getlantern.org")
-			case <-subMenuBottom2.ClickedCh:
-				panic("panic button pressed")
-			case <-subMenuBottom.ClickedCh:
-				toggle()
-			case <-mToggle.ClickedCh:
-				toggle()
+				open.Run(cfg.AppUrl)
+				break
 			case <-mQuit.ClickedCh:
+				fmt.Println("Requesting quit")
 				systray.Quit()
-				fmt.Println("Quit2 now...")
+				fmt.Println("Quit now...")
 				return
 			}
 		}

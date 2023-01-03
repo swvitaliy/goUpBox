@@ -1,4 +1,7 @@
 .idea
 rsync
 systray
+2goarray
+logs
 goupbox
+*.log
