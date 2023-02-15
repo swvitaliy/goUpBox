@@ -11,6 +11,17 @@ Props:
 * lightweight
 * no runtime dependencies
 
+## Usage
+
+## Settings
+
+```toml
+# Name of your application
+AppName=""
+```
+
+## Modules
+
 It uses 2 cross-platform (Win, Linux, MacOs) modules:
 
 * [systray](https://github.com/getlantern/systray)

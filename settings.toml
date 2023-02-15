@@ -1,8 +1,9 @@
 AppName="GoUpBox"
-AppDirectory="/tmp/text_app"
+AppDirectory="test"
 AppUrl="http://www.google.com"
 RSyncServer="rsync://cdn.gbooking.ru"
 RSyncTarget="ehr"
 RSyncPath="/win-x64"
 CheckForUpdatesVersionUrl="https://cdn.gbooking.ru/ehr-server/rsync/{OS}/VERSION"
+RSyncArgs=[ "-azP", "--delete", "rsync://web.gbooking.ru:873/ehr_server test" ]
 
