@@ -7,7 +7,6 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/skratchdot/open-golang/open"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"goupbox/gokr-rsync"
 	"goupbox/icon"
 	"io/ioutil"
 	"log"
@@ -96,7 +95,7 @@ func sync() {
 		log.Fatal("No rsync arguments specified...")
 		return
 	}
-	rsync.Main(cfg.RSyncArgs, os.Stdin, os.Stdout, os.Stderr)
+	RsyncMain(cfg.RSyncArgs, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func checkForUpdates() (bool, string) {

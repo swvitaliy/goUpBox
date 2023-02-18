@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"golang.org/x/sys/unix"
+	"goupbox/gokr-rsync"
 )
 
 func (rt *recvTransfer) createDevice(f *file, st fs.FileInfo) error {

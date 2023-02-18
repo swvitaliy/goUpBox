@@ -10,6 +10,7 @@ import (
 
 	"github.com/mmcloughlin/md4"
 	"goupbox/gokr-rsync/log"
+	"goupbox/gokr-rsync/rsyncwire"
 )
 
 // rsync/receiver.c:recv_files
@@ -82,7 +83,7 @@ func (rt *recvTransfer) openLocalFile(f *file) (*os.File, error) {
 
 // rsync/receiver.c:receive_data
 func (rt *recvTransfer) receiveData(f *file, localFile *os.File) error {
-	var sh rsync.SumHead
+	var sh rsyncwire.SumHead
 	if err := sh.ReadFrom(rt.conn); err != nil {
 		return err
 	}

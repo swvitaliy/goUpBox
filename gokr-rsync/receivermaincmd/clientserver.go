@@ -3,6 +3,7 @@ package receivermaincmd
 import (
 	"bufio"
 	"fmt"
+	"goupbox/gokr-rsync/rsyncwire"
 	"io"
 	"net"
 	"net/url"
@@ -51,7 +52,7 @@ func startInbandExchange(opts *Opts, conn io.ReadWriter, module, path string) er
 	rd := bufio.NewReader(conn)
 
 	// send client greeting
-	fmt.Fprintf(conn, "@RSYNCD: %d\n", rsync.ProtocolVersion)
+	fmt.Fprintf(conn, "@RSYNCD: %d\n", rsyncwire.ProtocolVersion)
 
 	// read server greeting
 	serverGreeting, err := rd.ReadString('\n')
@@ -75,7 +76,7 @@ func startInbandExchange(opts *Opts, conn io.ReadWriter, module, path string) er
 		return fmt.Errorf("server version %d too old", remoteProtocol)
 	}
 
-	log.Printf("(Client) Protocol versions: remote=%d, negotiated=%d", remoteProtocol, rsync.ProtocolVersion)
+	log.Printf("(Client) Protocol versions: remote=%d, negotiated=%d", remoteProtocol, rsyncwire.ProtocolVersion)
 	log.Printf("Client checksum: md4")
 
 	// send module name

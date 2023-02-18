@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	rsync "goupbox/gokr-rsync"
 	"io"
 	"os"
 	"os/exec"
@@ -307,7 +306,7 @@ func clientRun(osenv osenv, opts *Opts, conn io.ReadWriter, dest string, negotia
 	}
 
 	if negotiate {
-		if err := c.WriteInt32(rsync.ProtocolVersion); err != nil {
+		if err := c.WriteInt32(rsyncwire.ProtocolVersion); err != nil {
 			return nil, err
 		}
 		remoteProtocol, err := c.ReadInt32()
