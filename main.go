@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/emersion/go-autostart"
 	"github.com/getlantern/systray"
@@ -8,6 +9,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"goupbox/icon"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,7 +22,7 @@ var lumberJackLog = &lumberjack.Logger{
 	Filename:   "./logs/gupbox.log",
 	MaxSize:    100, // megabytes
 	MaxBackups: 2,
-	MaxAge:     7, //days
+	MaxAge:     14, //days
 }
 
 var cfg struct {
@@ -28,7 +30,8 @@ var cfg struct {
 	AppDirectory              string
 	AppUrl                    string
 	CheckForUpdatesVersionUrl string
-	RSyncArgs                 []string
+	Platform                  string
+	RsyncArgs                 []string
 }
 
 var app *autostart.App
@@ -91,18 +94,33 @@ func onStartup(enabling bool) {
 }
 
 func sync() {
-	if len(cfg.RSyncArgs) == 0 {
+	if len(cfg.RsyncArgs) == 0 {
 		log.Fatal("No rsync arguments specified...")
 		return
 	}
-	RsyncMain(cfg.RSyncArgs, os.Stdin, os.Stdout, os.Stderr)
+	RsyncMain(cfg.RsyncArgs, os.Stdin, os.Stdout, os.Stderr)
 }
 
-func checkForUpdates() (bool, string) {
-	resp, err := http.Get(cfg.CheckForUpdatesVersionUrl)
+type CheckUrlParams struct {
+	Platform string
+}
+
+func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, localVersion string) {
+	// Replace in url template with params
+	tmpl, err := template.New("checkForUpdates").Parse(cfg.CheckForUpdatesVersionUrl)
 	if err != nil {
+		log.Fatal(err)
+	}
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, params)
+	verUrl := buf.String()
+
+	log.Printf("Check for remote version file by url %s", verUrl)
+	resp, err := http.Get(verUrl)
+	if err != nil {
+		log.Printf("There isn't remote version file by url %s", verUrl)
 		log.Println(err)
-		return false, ""
+		return false, "", ""
 	}
 
 	defer resp.Body.Close()
@@ -113,29 +131,57 @@ func checkForUpdates() (bool, string) {
 		log.Fatal(err)
 	}
 
+	remoteVersion = string(body)
+
+	// When remote version is empty, it means that there is no remote version file
 	if resp.StatusCode != 200 {
-		log.Println("Error: " + string(body))
-		return false, ""
+		log.Println("Error: " + remoteVersion)
+		return false, "", ""
 	}
 
 	f, err := os.Open(path.Join(cfg.AppDirectory, "VERSION"))
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("There isn't local version file  %s.", path.Join(cfg.AppDirectory, "VERSION"))
+		//log.Fatal(err)
+		if stat, err2 := os.Stat(cfg.AppDirectory); err2 != nil {
+			if os.IsNotExist(err2) {
+				log.Printf("Local project directory is NOT exists %s...", cfg.AppDirectory)
+				log.Printf("Returns it has NOT a new remote version %s...", remoteVersion)
+				return false, "", ""
+			} else {
+				log.Fatal(err2)
+			}
+		} else {
+			if !stat.IsDir() {
+				log.Printf("Local project directory \"%s\" not detected as a diectory", cfg.AppDirectory)
+				panic(1)
+			}
+			log.Printf("Local project directory is exists %s...", cfg.AppDirectory)
+			log.Printf("Returns it has a new remote version %s...", remoteVersion)
+			return true, remoteVersion, ""
+		}
 	}
 	defer f.Close()
 
-	localVersion, err := ioutil.ReadAll(f)
+	fileBytes, err := ioutil.ReadAll(f)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Read local version file error")
+		log.Println(err)
+		return false, "", ""
 	}
 
-	return string(body) != string(localVersion), string(body)
+	localVersion = string(fileBytes)
+
+	return remoteVersion != localVersion, remoteVersion, localVersion
 }
 
 func onReady() {
 	systray.SetTemplateIcon(icon.Data, icon.Data)
 	systray.SetTitle("")
 	systray.SetTooltip(cfg.AppName)
+
+	currentPlatform := cfg.Platform // can be replaced by autodetect
+	log.Printf("Platform: %s", currentPlatform)
 
 	// We can manipulate the systray in other goroutines
 	go func() {
@@ -156,9 +202,16 @@ func onReady() {
 					mCheckForUpdates.Enable()
 				}()
 				mCheckForUpdates.Disable()
-				if status, version := checkForUpdates(); status {
-					log.Println("Found new version of " + cfg.AppName + ":" + version)
-					mUpdate.SetTitle("Update to new version of " + cfg.AppName + ":" + version)
+				params := CheckUrlParams{Platform: currentPlatform}
+				if status, remoteVersion, localVersion := checkForUpdates(params); status {
+					if localVersion == "" {
+						log.Printf("There is no local version file...")
+						log.Println("Found remote version of " + cfg.AppName + ":" + remoteVersion)
+						mUpdate.SetTitle("Download application \"" + cfg.AppName + "\" of version " + remoteVersion)
+					} else {
+						log.Println("Found new version of " + cfg.AppName + ":" + remoteVersion)
+						mUpdate.SetTitle("Update to new version of " + cfg.AppName + ":" + remoteVersion)
+					}
 					mUpdate.Enable()
 				} else {
 					log.Println("No new version of " + cfg.AppName)
