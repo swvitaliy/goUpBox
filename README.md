@@ -22,10 +22,11 @@ AppName=""
 
 ## Modules
 
-It uses 2 cross-platform (Win, Linux, MacOs) modules:
+It uses few cross-platform (Win, Linux, MacOs) modules:
 
 * [systray](https://github.com/getlantern/systray)
 * [go-autostart](https://github.com/emersion/go-autostart)
+* [open-golang](https://github.com/skratchdot/open-golang)
 
 It uses other useful native modules also:
 
