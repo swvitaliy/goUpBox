@@ -15,10 +15,7 @@ Props:
 
 ## Settings
 
-```toml
-# Name of your application
-AppName=""
-```
+See [settings.toml](./settings.toml) file for example.
 
 ## Modules
 
