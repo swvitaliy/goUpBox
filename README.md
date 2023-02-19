@@ -28,5 +28,5 @@ It uses few cross-platform (Win, Linux, MacOs) modules:
 It uses other useful native modules also:
 
 * [go-toml](https://github.com/pelletier/go-toml)
-* [gocrasy/rsync](https://github.com/gokrazy/rsync)
+* [gocrasy/rsync](https://github.com/gokrazy/rsync) (just copied sources)
 * [lumberjack](https://gopkg.in/natefinch/lumberjack.v2) - log rotation
