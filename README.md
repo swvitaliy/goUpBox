@@ -11,11 +11,25 @@ Props:
 * lightweight
 * no runtime dependencies
 
-## Usage
+This update manager runs rsync over previous version from remote rsync server.
+So it is really fast cause it is incremental update.
 
 ## Settings
 
 See [settings.toml](./settings.toml) file for example.
+
+## Requirements
+
+Your app files should be available through rsync server and http server (nginx or else) same directory. 
+
+It should has 2 types of version files:
+
+- VERSION (fixed name of file) 
+- version-1.2.3.txt (files that contains version value in the name of file)
+
+The VERSION file contains latest version of your app (remote or local).
+The "version-x.y.z.txt" new file saves each time when update happened. 
+Command like `ls version-*.txt` returns list of installed versions.
 
 ## Modules
 
