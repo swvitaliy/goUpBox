@@ -105,15 +105,22 @@ type CheckUrlParams struct {
 	Platform string
 }
 
-func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, localVersion string) {
-	// Replace in url template with params
-	tmpl, err := template.New("checkForUpdates").Parse(cfg.CheckForUpdatesVersionUrl)
+func resolveTemplate(name string, str string, params CheckUrlParams) string {
+	t, err := template.New(name).Parse(str)
 	if err != nil {
 		log.Fatal(err)
 	}
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, params)
-	verUrl := buf.String()
+	err = t.Execute(&buf, params)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return buf.String()
+}
+
+func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, localVersion string) {
+	// Replace in url template with params
+	verUrl := resolveTemplate("checkForUpdatesVersionUrl", cfg.CheckForUpdatesVersionUrl, params)
 
 	log.Printf("Check for remote version file by url %s", verUrl)
 	resp, err := http.Get(verUrl)
@@ -139,13 +146,15 @@ func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, 
 		return false, "", ""
 	}
 
-	f, err := os.Open(path.Join(cfg.AppDirectory, "VERSION"))
+	localPath := resolveTemplate("localPath", cfg.AppDirectory, params)
+	localVersionPath := path.Join(localPath, "VERSION")
+	f, err := os.Open(localVersionPath)
 	if err != nil {
 		log.Printf("There isn't local version file  %s.", path.Join(cfg.AppDirectory, "VERSION"))
 		//log.Fatal(err)
-		if stat, err2 := os.Stat(cfg.AppDirectory); err2 != nil {
+		if stat, err2 := os.Stat(localPath); err2 != nil {
 			if os.IsNotExist(err2) {
-				log.Printf("Local project directory is NOT exists %s...", cfg.AppDirectory)
+				log.Printf("Local project directory is NOT exists %s...", localPath)
 				log.Printf("Returns it has NOT a new remote version %s...", remoteVersion)
 				return false, "", ""
 			} else {
@@ -153,10 +162,10 @@ func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, 
 			}
 		} else {
 			if !stat.IsDir() {
-				log.Printf("Local project directory \"%s\" not detected as a diectory", cfg.AppDirectory)
+				log.Printf("Local project directory \"%s\" not detected as a diectory", localPath)
 				panic(1)
 			}
-			log.Printf("Local project directory is exists %s...", cfg.AppDirectory)
+			log.Printf("Local project directory is exists %s...", localPath)
 			log.Printf("Returns it has a new remote version %s...", remoteVersion)
 			return true, remoteVersion, ""
 		}
@@ -194,6 +203,9 @@ func onReady() {
 		mCheckForUpdates := systray.AddMenuItem("Check for Updates...", "Check for Updates")
 		mUpdate := systray.AddMenuItem("Update...", "Update")
 
+		// TODO That if file VERSION updated and update process stopped by user => lock file
+
+		updateInProgress := func() {}
 		checkForUpdates1 := func() {
 			mCheckForUpdates.SetTitle("Checking...")
 			go func() {
@@ -207,15 +219,25 @@ func onReady() {
 					if localVersion == "" {
 						log.Printf("There is no local version file...")
 						log.Println("Found remote version of " + cfg.AppName + ":" + remoteVersion)
-						mUpdate.SetTitle("Download application \"" + cfg.AppName + "\" of version " + remoteVersion)
+						mUpdate.SetTitle("Download " + cfg.AppName + "  version " + remoteVersion)
+
+						updateInProgress = func() {
+							mUpdate.Disable()
+							mUpdate.SetTitle("Downloading " + cfg.AppName + "...")
+						}
 					} else {
 						log.Println("Found new version of " + cfg.AppName + ":" + remoteVersion)
-						mUpdate.SetTitle("Update to new version of " + cfg.AppName + ":" + remoteVersion)
+						mUpdate.SetTitle("Update " + cfg.AppName + ":" + localVersion + " to " + remoteVersion)
+
+						updateInProgress = func() {
+							mUpdate.Disable()
+							mUpdate.SetTitle("Updating " + cfg.AppName + ":" + localVersion + " to " + remoteVersion + "...")
+						}
 					}
 					mUpdate.Enable()
 				} else {
-					log.Println("No new version of " + cfg.AppName)
-					mUpdate.SetTitle("No new version of " + cfg.AppName)
+					log.Println("There isn't a new version " + cfg.AppName)
+					mUpdate.SetTitle("There isn't a new version " + cfg.AppName)
 					mUpdate.Disable()
 				}
 			}()
@@ -245,6 +267,7 @@ func onReady() {
 				checkForUpdates1()
 				break
 			case <-mUpdate.ClickedCh:
+				updateInProgress()
 				sync()
 				checkForUpdates1()
 				break

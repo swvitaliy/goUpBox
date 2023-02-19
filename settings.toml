@@ -2,7 +2,7 @@
 AppName = "GoUpBox"
 
 # Local app directory
-AppDirectory = "/tmp/test"
+AppDirectory = "/tmp/test/{{.Platform}}"
 
 # This url used for "help" menu item
 AppUrl = "https://www.google.com"
@@ -14,8 +14,10 @@ Platform = "ubuntu.20.04-x64"
 CheckForUpdatesVersionUrl = "https://cdn.gbooking.ru/ehr_server_latest_rsync/{{.Platform}}/VERSION"
 
 # Rsync function arguments
+# Original command:
+# rsync -avz --delete rsync://web.gbooking.ru/ehr_server /tmp/test
 # TODO: import from c code rsync option --delete
-# TODO: import from c code rsync option --archive (-z)
-# RsyncArgs = [ "-avz", "--delete", "rsync://web.gbooking.ru/ehr_server", "/tmp/test" ]
+# TODO: import from c code rsync option --compress (-z)
+# RsyncArgs = [ "rsync", "-avz", "--delete", "rsync://web.gbooking.ru/ehr_server", "/tmp/test" ]
 RsyncArgs = [ "[[:rsync:]]", "-av", "rsync://web.gbooking.ru/ehr_server/", "/tmp/test" ]
 
