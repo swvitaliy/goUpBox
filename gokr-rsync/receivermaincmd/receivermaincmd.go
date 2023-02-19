@@ -179,7 +179,8 @@ func rsyncMain(osenv osenv, opts *Opts, sources []string, dest string) (*Stats, 
 		if idx := strings.IndexByte(module, '/'); idx > -1 {
 			module = module[:idx]
 		}
-		log.Printf("module=%q, path=%q", module, path)
+		log.Printf("module=%q, path=%q daemonConn=%d", module, path, daemonConnection)
+		log.Printf("opts=%v", opts)
 
 		if daemonConnection < 0 {
 			stats, err := socketClient(osenv, opts, src, dest)

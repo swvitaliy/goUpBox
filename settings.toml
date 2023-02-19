@@ -1,8 +1,21 @@
+# Name of your application
 AppName = "GoUpBox"
+
+# Local app directory
 AppDirectory = "/tmp/test"
+
+# This url used for "help" menu item
 AppUrl = "https://www.google.com"
+
+# Current installation platform
 Platform = "ubuntu.20.04-x64"
+
+# Url template for checking latest remote version
 CheckForUpdatesVersionUrl = "https://cdn.gbooking.ru/ehr_server_latest_rsync/{{.Platform}}/VERSION"
+
+# Rsync function arguments
+# TODO: import from c code rsync option --delete
+# TODO: import from c code rsync option --archive (-z)
 # RsyncArgs = [ "-avz", "--delete", "rsync://web.gbooking.ru/ehr_server", "/tmp/test" ]
-RsyncArgs = [ "-avz", "rsync://web.gbooking.ru/ehr_server", "/tmp/test" ]
+RsyncArgs = [ "[[:rsync:]]", "-av", "rsync://web.gbooking.ru/ehr_server/", "/tmp/test" ]
 
