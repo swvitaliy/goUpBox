@@ -1,6 +1,6 @@
 # GoUpBox
 
-The update manager systray written in go.
+The update manager systray over rsync written in go.
 
 Props:
 
