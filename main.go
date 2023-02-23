@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 )
 
@@ -37,11 +38,19 @@ var cfg struct {
 var app *autostart.App
 
 func main() {
-	f, err := os.Open("settings.toml")
+	execPath, err0 := os.Executable()
+	if err0 != nil {
+		log.Fatal(err0)
+	}
+
+	cfgFile := path.Join(filepath.Dir(execPath), "settings.toml")
+	f, err := os.Open(cfgFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
+
+	lumberJackLog.Filename = path.Join(filepath.Dir(execPath), "logs", "goupbox.log")
 
 	bDoc, err := ioutil.ReadAll(f)
 	if err != nil {
