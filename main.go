@@ -69,7 +69,7 @@ func main() {
 	app = &autostart.App{
 		Name:        cfg.AppName,
 		DisplayName: cfg.AppName,
-		//Exec:        []string{"sh", "-c", "echo autostart >> ~/autostart.txt"},
+		Exec:        []string{execPath},
 	}
 
 	onExit := func() {
