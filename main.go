@@ -213,6 +213,7 @@ func onReady() {
 		mUpdate := systray.AddMenuItem("Update...", "Update")
 
 		// TODO That if file VERSION updated and update process stopped by user => lock file
+		// TODO Compare checksums of each downloaded file
 
 		updateInProgress := func() {}
 		checkForUpdates1 := func() {
