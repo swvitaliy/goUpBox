@@ -40,7 +40,7 @@ Command like `ls version-*.txt` returns list of installed versions.
 It uses few cross-platform (Win, Linux, MacOs) modules:
 
 * [systray](https://github.com/getlantern/systray)
-* [go-autostart](https://github.com/emersion/go-autostart)
+* [go-autostart](https://github.com/sergz72/go-autostart)
 * [open-golang](https://github.com/skratchdot/open-golang)
 
 It uses other useful native modules also:
