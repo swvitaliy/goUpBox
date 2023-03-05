@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
-	"github.com/emersion/go-autostart"
 	"github.com/getlantern/systray"
 	"github.com/pelletier/go-toml/v2"
+	"github.com/sergz72/go-autostart"
 	"github.com/skratchdot/open-golang/open"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"goupbox/icon"
@@ -43,14 +44,29 @@ func main() {
 		log.Fatal(err0)
 	}
 
-	cfgFile := path.Join(filepath.Dir(execPath), "settings.toml")
+	// --settings=/etc/goupbox.conf
+	settingsPath := flag.String("settings", "", "path to settings file")
+	logPath := flag.String("log", "", "path to log file")
+	flag.Parse()
+
+	var cfgFile string
+	if *settingsPath != "" {
+		cfgFile = *settingsPath
+	} else {
+		cfgFile = path.Join(filepath.Dir(execPath), "settings.toml")
+	}
+
 	f, err := os.Open(cfgFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 
-	lumberJackLog.Filename = path.Join(filepath.Dir(execPath), "logs", "goupbox.log")
+	if *logPath != "" {
+		lumberJackLog.Filename = *logPath
+	} else {
+		lumberJackLog.Filename = path.Join(filepath.Dir(execPath), "logs", "goupbox.log")
+	}
 
 	bDoc, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -66,10 +82,17 @@ func main() {
 	log.Printf("Switching logs output to '%s'...", lumberJackLog.Filename)
 	log.SetOutput(lumberJackLog)
 
+	exec := []string{execPath}
+	if *settingsPath != "" {
+		exec = append(exec, "-settings", *settingsPath)
+	}
+	if *logPath != "" {
+		exec = append(exec, "-log", *logPath)
+	}
 	app = &autostart.App{
 		Name:        cfg.AppName,
 		DisplayName: cfg.AppName,
-		Exec:        []string{execPath},
+		Exec:        exec,
 	}
 
 	onExit := func() {

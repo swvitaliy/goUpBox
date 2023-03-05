@@ -12,7 +12,11 @@ Props:
 * no runtime dependencies
 
 This update manager runs rsync over previous version from remote rsync server.
-So it is really fast cause it is incremental update.
+So it is really fast because it is incremental update.
+
+In practice, It has problems with the cross compilation, and It needed the same host os as the target.
+
+I faced the open issue in systray module that didn't let me compile for macOS from linux host - https://github.com/getlantern/systray/issues/34
 
 ## Settings
 
