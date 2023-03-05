@@ -11,8 +11,8 @@ Props:
 * lightweight
 * no runtime dependencies
 
-This update manager runs rsync over previous version from remote rsync server.
-So it is really fast because it is incremental update.
+This update manager roll files of the new version into the directory with files of some previous version.
+It uses rsync implementation written in go so it is really fast.
 
 In practice, It has problems with the cross compilation, and It needed the same host os as the target.
 
