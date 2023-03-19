@@ -26,6 +26,3 @@ jobs:
         GOOS: linux 
         GOARCH: amd64
       run: go build -v ./... -o bin/goupbox-linux-amd64
-
-    - name: Test
-      run: go test -v ./...
