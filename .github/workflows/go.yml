@@ -11,10 +11,13 @@ on:
 
 jobs:
 
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+
+    - name: Install apt package appindicator
+      run: sudo apt install libappindicator3-dev
 
     - name: Set up Go
       uses: actions/setup-go@v3
@@ -24,8 +27,19 @@ jobs:
     - name: Install apt package appindicator
       run: sudo apt install -y libgtk-3-dev libappindicator3-dev gir1.2-appindicator3-0.1
 
-    - name: Build
+    - name: Build Ubuntu
       env:
-        GOOS: linux 
+        GOOS: linux
         GOARCH: amd64
       run: go build -v -o bin/goupbox-linux-amd64
+
+  build-macOS:
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build MacOS
+      env:
+        GOOS: darwin
+        GOARCH: amd64
+      run: go build -v -o bin/goupbox-macos-amd64
