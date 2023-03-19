@@ -31,7 +31,8 @@ jobs:
       env:
         GOOS: linux
         GOARCH: amd64
-      run: go build -v -o bin/goupbox-linux-amd64
+      # https://github.com/getlantern/systray/issues/222
+      run: go build -v -tags=legacy_appindicator -o bin/goupbox-linux-amd64
 
   build-macOS:
     runs-on: macos-12
