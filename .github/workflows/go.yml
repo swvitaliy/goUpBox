@@ -21,6 +21,9 @@ jobs:
       with:
         go-version: 1.18.3
 
+    - name: Install apt package appindicator
+      run: sudo apt install libappindicator3-dev
+
     - name: Build
       env:
         GOOS: linux 
