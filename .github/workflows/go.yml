@@ -36,8 +36,8 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: bin/goupbox-linux-amd64
-        path: bin
+        name: goupbox-linux-amd64
+        path: bin/goupbox-linux-amd64
 
   build-macOS:
     runs-on: macos-12
