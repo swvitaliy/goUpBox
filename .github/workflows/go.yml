@@ -49,6 +49,7 @@ jobs:
       with:
         name: goupbox-linux-amd64.tar.gz
         path: goupbox-linux-amd64.tar.gz
+        retention-days: 5
 
   build-macOS:
     runs-on: macos-12
@@ -72,6 +73,12 @@ jobs:
         cd ..
         rm -rf dist
 
+    - uses: actions/upload-artifact@v3
+      with:
+        name: goupbox-macos-amd64.zip
+        path: goupbox-macos-amd64.zip
+        retention-days: 5
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -90,5 +97,14 @@ jobs:
         cp settings.toml dist
         cp README.md dist
         cd dist
-        zip -r ../goupbox-windows-amd64.zip .
-        
+        7z a ../goupbox-windows-amd64.zip .
+        cd ..
+        rm -rf dist
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: goupbox-windows-amd64.zip
+        path: goupbox-windows-amd64.zip
+        retention-days: 5
+
+
