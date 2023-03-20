@@ -34,6 +34,11 @@ jobs:
       # https://github.com/getlantern/systray/issues/222
       run: go build -v -tags=legacy_appindicator -o bin/goupbox-linux-amd64
 
+    - uses: actions/upload-artifact@v3
+      with:
+        name: bin/goupbox-linux-amd64
+        path: bin
+
   build-macOS:
     runs-on: macos-12
     steps:
