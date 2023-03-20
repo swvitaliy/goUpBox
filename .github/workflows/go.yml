@@ -44,3 +44,14 @@ jobs:
         GOOS: darwin
         GOARCH: amd64
       run: go build -v -o bin/goupbox-macos-amd64
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build Windows
+      env:
+        GOOS: windows
+        GOARCH: amd64
+      run: go build -v -o bin/goupbox-windows-amd64.exe
