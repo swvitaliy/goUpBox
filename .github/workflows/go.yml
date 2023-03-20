@@ -99,7 +99,6 @@ jobs:
         cd dist
         7z a ../goupbox-windows-amd64.zip .
         cd ..
-        rm -rf dist
 
     - uses: actions/upload-artifact@v3
       with:
