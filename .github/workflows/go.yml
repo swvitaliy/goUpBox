@@ -34,10 +34,16 @@ jobs:
       # https://github.com/getlantern/systray/issues/222
       run: go build -v -tags=legacy_appindicator -o bin/goupbox-linux-amd64
 
+    - name: Make tar gz file
+      run: mkdir dist && cp bin/goupbox-linux-amd64 dist && \
+        cp settings.toml dist && \
+        cp README.md dist && \
+        tar -czvf goupbox-linux-amd64.tar.gz dist
+
     - uses: actions/upload-artifact@v3
       with:
-        name: goupbox-linux-amd64
-        path: bin/goupbox-linux-amd64
+        name: goupbox-linux-amd64.tar.gz
+        path: goupbox-linux-amd64.tar.gz
 
   build-macOS:
     runs-on: macos-12
@@ -50,6 +56,12 @@ jobs:
         GOARCH: amd64
       run: go build -v -o bin/goupbox-macos-amd64
 
+    - name: Make zip archive
+      run: mkdir dist && cp bin/goupbox-macos-amd64 dist && \
+        cp settings.toml dist && \
+        cp README.md dist && \
+        zip -r dist/goupbox-macos-amd64.zip dist
+
   build-windows:
     runs-on: windows-latest
     steps:
@@ -60,3 +72,9 @@ jobs:
         GOOS: windows
         GOARCH: amd64
       run: go build -v -o bin/goupbox-windows-amd64.exe
+
+    - name: Make zip archive
+      run: mkdir dist && cp bin/goupbox-windows-amd64.exe dist && \
+        cp settings.toml dist && \
+        cp README.md dist && \
+        zip -r dist/goupbox-windows-amd64.zip dist
