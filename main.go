@@ -206,7 +206,7 @@ func checkForUpdates(params CheckUrlParams) (status bool, remoteVersion string, 
 
 	fileBytes, err := ioutil.ReadAll(f)
 	if err != nil {
-		log.Println("Read local version file error")
+		log.Println("Error: read a local version")
 		log.Println(err)
 		return false, "", ""
 	}
@@ -251,26 +251,26 @@ func onReady() {
 				if status, remoteVersion, localVersion := checkForUpdates(params); status {
 					if localVersion == "" {
 						log.Printf("There is no local version file...")
-						log.Println("Found remote version of " + cfg.AppName + ":" + remoteVersion)
-						mUpdate.SetTitle("Download " + cfg.AppName + "  version " + remoteVersion)
+						log.Printf("Found remote version of %s: %s", cfg.AppName, remoteVersion)
+						mUpdate.SetTitle(fmt.Sprintf("Download %s version %s", cfg.AppName, remoteVersion))
 
 						updateInProgress = func() {
 							mUpdate.Disable()
-							mUpdate.SetTitle("Downloading " + cfg.AppName + "...")
+							mUpdate.SetTitle(fmt.Sprintf("Downloading %s...", cfg.AppName))
 						}
 					} else {
-						log.Println("Found new version of " + cfg.AppName + ":" + remoteVersion)
-						mUpdate.SetTitle("Update " + cfg.AppName + ":" + localVersion + " to " + remoteVersion)
+						log.Printf("Found new version of %s: %s\n", cfg.AppName, remoteVersion)
+						mUpdate.SetTitle(fmt.Sprintf("Update %s version %s to %s", cfg.AppName, localVersion, remoteVersion))
 
 						updateInProgress = func() {
 							mUpdate.Disable()
-							mUpdate.SetTitle("Updating " + cfg.AppName + ":" + localVersion + " to " + remoteVersion + "...")
+							mUpdate.SetTitle(fmt.Sprintf("Updating %s: %s to %s...", cfg.AppName, localVersion, remoteVersion))
 						}
 					}
 					mUpdate.Enable()
 				} else {
-					log.Println("There isn't a new version " + cfg.AppName)
-					mUpdate.SetTitle("There isn't a new version " + cfg.AppName)
+					log.Printf("There isn't a new version %s", cfg.AppName)
+					mUpdate.SetTitle(fmt.Sprintf("There isn't a new version %s", cfg.AppName))
 					mUpdate.Disable()
 				}
 			}()
