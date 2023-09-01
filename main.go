@@ -125,12 +125,12 @@ func onStartup(enabling bool) {
 	}
 }
 
-func sync() {
+func sync() (bool, error) {
 	if len(cfg.RsyncArgs) == 0 {
 		log.Fatal("No rsync arguments specified...")
-		return
+		return false, nil
 	}
-	RsyncMain(cfg.RsyncArgs, os.Stdin, os.Stdout, os.Stderr)
+	return RsyncMain(cfg.RsyncArgs, os.Stdin, os.Stdout, os.Stderr)
 }
 
 type CheckUrlParams struct {
@@ -301,8 +301,21 @@ func onReady() {
 				break
 			case <-mUpdate.ClickedCh:
 				updateInProgress()
-				sync()
+				status, errSync := sync()
 				checkForUpdates1()
+
+				if errSync != nil {
+					log.Fatalln(errSync.Error())
+				}
+
+				if !status {
+					mCheckForUpdates.SetTitle("Check for Updates...")
+					mCheckForUpdates.Disable()
+					mUpdate.SetTitle("Failed to update. Please, see logs for more details.")
+					mUpdate.Disable()
+					break
+				}
+
 				break
 			case <-mUrl.ClickedCh:
 				open.Run(cfg.AppUrl)

@@ -17,7 +17,7 @@ require (
 	github.com/stapelberg/rsyncparse v0.0.0-20211228091344-84a4474990ee
 	golang.org/x/crypto v0.4.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.3.0
+	golang.org/x/sys v0.10.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
 
@@ -30,6 +30,7 @@ require (
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f // indirect
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/sergz72/go-autostart v1.1.6 // indirect
 	golang.org/x/term v0.3.0 // indirect

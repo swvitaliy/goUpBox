@@ -17,7 +17,6 @@ CheckForUpdatesVersionUrl = "https://cdn.gbooking.ru/ehr_server_latest_rsync/{{.
 # Original command:
 # rsync -avz --delete rsync://web.gbooking.ru/ehr_server /tmp/test
 # TODO: import from c code rsync option --delete
-# TODO: import from c code rsync option --compress (-z)
 # RsyncArgs = [ "rsync", "-avz", "--delete", "rsync://web.gbooking.ru/ehr_server", "/tmp/test" ]
 RsyncArgs = [ "[[:rsync:]]", "-av", "rsync://web.gbooking.ru/ehr_server/", "/tmp/test" ]
 
