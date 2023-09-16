@@ -8,36 +8,36 @@ Props:
 * simple
 * fast
 * configurable
-* lightweight
+* Lightweight
 * no runtime dependencies
 
-This update manager put files of the new version into the directory with a previous version.
-It uses rsync implementation written in go so it is really fast.
+This update manager puts files of the new version into the directory with the previous version.
+It uses rsync implementation written in go so it is pretty fast.
 
-In practice, It has problems with the cross compilation, and It needed the same host os as the target.
+In practice, It has problems with cross-compilation, and It needs the same host OS as the target.
 
-I faced the open issue in systray module that didn't let me compile for macOS from linux host - https://github.com/getlantern/systray/issues/34
+I faced an open issue in the systray module that didn't let me compile for macOS from a Linux host - https://github.com/getlantern/systray/issues/34
 
 ## Settings
 
-See [settings.toml](./settings.toml) file for example.
+See [settings.toml](./settings.toml) file.
 
 ## Requirements
 
-Your app files should be available through rsync server and http server (nginx or else) same directory. 
+Your app files should be available through the rsync server and http server (nginx or else) same directory. 
 
-It should has 2 types of version files:
+It should have 2 types of version files:
 
 - VERSION (fixed name of file) 
-- version-1.2.3.txt (files that contains version value in the name of file)
+- version-1.2.3.txt (files that contain version value in the name of the file)
 
-The VERSION file contains latest version of your app (remote or local).
-The "version-x.y.z.txt" new file saves each time when update happened. 
-Command like `ls version-*.txt` returns list of installed versions.
+The VERSION file contains the latest version of your app (remote or local).
+The "version-x.y.z.txt" new file saves each time an update happens. 
+A command like `ls version-*.txt` returns a list of installed versions.
 
 ## Modules
 
-It uses few cross-platform (Win, Linux, MacOs) modules:
+It uses a few cross-platform (Win, Linux, macOS) modules:
 
 * [systray](https://github.com/getlantern/systray)
 * [go-autostart](https://github.com/sergz72/go-autostart)
